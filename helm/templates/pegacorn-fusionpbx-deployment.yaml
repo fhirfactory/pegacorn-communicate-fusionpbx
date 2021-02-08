@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    fabric8.io/metrics-path: dashboard/file/camel-routes.json/?var-project={{ .Values.serviceName }}&var-version={{ .Values.imageTag }}
+  labels:
+    app: {{ .Values.serviceName }}
+    provider: fabric8
+    version: "{{ .Values.imageTag }}"
+    group: net.fhirbox.pegacorn
+  name: {{ .Values.serviceName }}
+spec:
+  replicas: {{ .Values.numOfPods | default 2 }}
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: {{ .Values.serviceName }}
+      provider: fabric8
+      group: net.fhirbox.pegacorn
+  template:
+    metadata:
+      annotations:
+        fabric8.io/metrics-path: dashboard/file/camel-routes.json/?var-project={{ .Values.serviceName }}&var-version={{ .Values.imageTag }}
+      labels:
+        app: {{ .Values.serviceName }}
+        provider: fabric8
+        version: "{{ .Values.imageTag }}"
+        group: net.fhirbox.pegacorn
+        date: "{{ date "20060102-150405" .Release.Time }}"
+    spec:
+      {{- if (.Values.acrSecretName) }} 
+      imagePullSecrets:
+        - name: {{ .Values.acrSecretName }}
+      {{- end }}
+      #hostNetwork: true
+      containers:
+      - env:
+        - name: MY_HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: MY_POD_SERVICE_ACCOUNT
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.serviceAccountName
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        image: {{ .Values.dockerRepo }}fusionpbx-docker:{{ .Values.imageTag }}            
+        imagePullPolicy: {{ .Values.imagePullPolicy | default "IfNotPresent" }}
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/bash","-c","echo 127.0.0.1 postgresql >> /etc/hosts; echo 127.0.0.1 fusionpbx >> /etc/hosts; echo 127.0.0.1 freeswitch >> /etc/hosts; echo 127.0.0.1 memcached >> /etc/hosts"]
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 60
+        name: fusionpbx
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        - containerPort: 443
+          name: https
+          protocol: TCP
+        - containerPort: 8021
+          name: freeswitch-cli
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 60
+
