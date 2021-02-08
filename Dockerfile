@@ -18,7 +18,6 @@ RUN apt-get update \
 	&& apt-get upgrade -y \
 	&& apt-get install -y --allow-unauthenticated \ 		
 	apt-transport-https \
-	apt-utils \
 	bsdmainutils \
 	ca-certificates \
 	curl \
@@ -54,7 +53,6 @@ RUN git clone https://github.com/fusionpbx/fusionpbx.git /var/www/fusionpbx \
 	&& git clone https://github.com/fusionpbx/fusionpbx-apps \
 	&& mv fusionpbx-apps/webrtc /var/www/fusionpbx/app
 RUN chown -R www-data:www-data /var/www/fusionpbx
-RUN chown -R www-data:www-data /var/www/fusionpbx/app/webrtc
 RUN wget https://raw.githubusercontent.com/fusionpbx/fusionpbx-install.sh/master/debian/resources/nginx/fusionpbx -O /etc/nginx/sites-available/fusionpbx \ 
 	&& find /etc/nginx/sites-available/fusionpbx -type f -exec sed -i 's/\/var\/run\/php\/php7.1-fpm.sock/\/run\/php\/php'"7.3"'-fpm.sock/g' {} \; \	
 	&& ln -s /etc/nginx/sites-available/fusionpbx /etc/nginx/sites-enabled/fusionpbx \ 	
@@ -173,4 +171,3 @@ COPY logo.png /var/www/fusionpbx/themes/default/images/logo.png
 VOLUME ["/var/lib/postgresql", "/etc/freeswitch", "/var/lib/freeswitch", "/usr/share/freeswitch", "/var/www/fusionpbx"]
 
 CMD /usr/bin/supervisord -n
-
