@@ -34,7 +34,15 @@ spec:
       {{- end }}
       #hostNetwork: true
       containers:
-      - env:
+      - env:          
+        - name: DATASOURCE_SERVICE_NAME
+          value: {{ .Values.dataSourceServiceName }}
+        - name: DATASOURCE_PORT_AND_DBNAME
+          value: {{ .Values.dataSourcePortAndDBName }}          
+        - name: FUSIONPBX_DATASOURCE_USER
+          value: {{ .Values.dbUser }}
+        - name: {{ upper .Values.serviceName | replace "-" "_" }}_{{ upper .Release.Namespace | replace "-" "_" }}_BASE_PORT
+          value: "{{ .Values.basePort }}"
         - name: MY_HOST_IP
           valueFrom:
             fieldRef:
@@ -92,4 +100,12 @@ spec:
             port: 80
             scheme: HTTP
           initialDelaySeconds: 30
+        volumeMounts:
+        - name: certificates
+          mountPath: /var/lib/pegacorn-ssl-certs          
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
+      volumes:
+      - name: certificates
+        hostPath:
+          path: {{ .Values.hostPathCerts }}
 

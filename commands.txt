@@ -4,8 +4,12 @@
 docker exec 492 sudo -u postgres psql -c "ALTER USER fusionpbx WITH PASSWORD 'newpassword';"
 
 ==================================================
-\helm upgrade pegacorn-fusionpbx-dbaas-site-a --install --namespace site-a --set serviceName=pegacorn-fusionpbx-dbaas,nodeAffinityLabel=fhirplace,hostPath=/data/fusionpbx-dbaas-site-a/data,hostPathCerts=/data/certificates,basePort=30510,imageTag=1.0.0-snapshot,dbUser=fusionpbx,dbName=fusionpbx,serviceType=NodePort,numOfPods=1 helm-postgres
+# Fusionpbx database
+docker build --rm -t pegacorn/pegacorn-postgres:1.0.0-snapshot --file Dockerfile .
 
-\helm upgrade pegacorn-fusionpbx-site-a --install --namespace site-a --set serviceName=pegacorn-fusionpbx,imagePullPolicy=Never,nodeAffinityLabel=fhirplace,basePort=30512,imageTag=1.0.0-snapshot,dataSourceServiceName=pegacorn-fusionpbx-dbaas,dataSourcePortAndDBName="30510/fusionpbx",hostPathCerts=/data/certificates,dbUser=fusionpbx,clientCertSubject="CN\\\\=aether-ladon-gen0.site-a",numOfPods=1 helm
+\helm\helm upgrade pegacorn-fusionpbx-dbaas-site-a --install --namespace site-a --set serviceName=pegacorn-fusionpbx-dbaas,nodeAffinityLabel=fhirplace,hostPath=/data/fusionpbx-dbaas-site-a/data,hostPathCerts=/data/certificates,basePort=30510,imageTag=1.0.0-snapshot,serviceType=NodePort,numOfPods=1 helm-postgres
 
-\helm upgrade pegacorn-fusionpbx.site-a --install --namespace site-a --set serviceName=pegacorn-fusionpbx,imagePullPolicy=Never,imageTag=1.0.0-snapshot,numOfPods=1 helm
+# Fusionpbx server
+docker build --rm --build-arg IMAGE_BUILD_TIMESTAMP="%date% %time%" -t pegacorn-communicate-fusionpbx:1.0.0-snapshot .
+
+\helm\helm upgrade pegacorn-fusionpbx-site-a --install --namespace site-a --set serviceName=pegacorn-fusionpbx,nodeAffinityLabel=fhirplace,basePort=30512,imageTag=1.0.0-snapshot,dataSourceServiceName=pegacorn-fusionpbx-dbaas,dataSourcePortAndDBName="30510/fusionpbx",hostPathCerts=/data/certificates,dbUser=fusionpbx,numOfPods=1 helm
