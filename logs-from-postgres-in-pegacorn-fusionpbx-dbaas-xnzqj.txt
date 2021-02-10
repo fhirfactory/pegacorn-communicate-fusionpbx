@@ -1,0 +1,328 @@
+Staring docker-entrypoint.sh as user root with params postgres -c config_file=/var/lib/postgresql/config/postgresql.conf -c hba_file=/var/lib/postgresql/config/pg_hba.conf
+Copying certificates like /var/lib/pegacorn-ssl-certs/pegacorn-fusionpbx-dbaas.site-a.* to /var/lib/postgresql/config/
+total 68
+drwxr-xr-x    1 root     root          4096 Feb 10 07:28 .
+drwxr-xr-x    1 postgres postgres      4096 Dec  4 06:46 ..
+-r--------    1 postgres postgres      1200 Feb 10 07:28 ca.cer
+-rw-------    1 postgres postgres      5352 Feb 10 04:22 pg_hba.conf
+-rw-------    1 postgres postgres     35865 Nov 22 22:56 postgresql.conf
+-r--------    1 postgres postgres      1596 Feb 10 07:28 server.cer
+-r--------    1 postgres postgres      2139 Feb 10 07:28 server.key
+# PostgreSQL Client Authentication Configuration File
+# ===================================================
+#
+# Refer to the "Client Authentication" section in the PostgreSQL
+# documentation for a complete description of this file.  A short
+# synopsis follows.
+#
+# This file controls: which hosts are allowed to connect, how clients
+# are authenticated, which PostgreSQL user names they can use, which
+# databases they can access.  Records take one of these forms:
+#
+# local      DATABASE  USER  METHOD  [OPTIONS]
+# host       DATABASE  USER  ADDRESS  METHOD  [OPTIONS]
+# hostssl    DATABASE  USER  ADDRESS  METHOD  [OPTIONS]
+# hostnossl  DATABASE  USER  ADDRESS  METHOD  [OPTIONS]
+#
+# (The uppercase items must be replaced by actual values.)
+#
+# The first field is the connection type: "local" is a Unix-domain
+# socket, "host" is either a plain or SSL-encrypted TCP/IP socket,
+# "hostssl" is an SSL-encrypted TCP/IP socket, and "hostnossl" is a
+# plain TCP/IP socket.
+#
+# DATABASE can be "all", "sameuser", "samerole", "replication", a
+# database name, or a comma-separated list thereof. The "all"
+# keyword does not match "replication". Access to replication
+# must be enabled in a separate record (see example below).
+#
+# USER can be "all", a user name, a group name prefixed with "+", or a
+# comma-separated list thereof.  In both the DATABASE and USER fields
+# you can also write a file name prefixed with "@" to include names
+# from a separate file.
+#
+# ADDRESS specifies the set of hosts the record matches.  It can be a
+# host name, or it is made up of an IP address and a CIDR mask that is
+# an integer (between 0 and 32 (IPv4) or 128 (IPv6) inclusive) that
+# specifies the number of significant bits in the mask.  A host name
+# that starts with a dot (.) matches a suffix of the actual host name.
+# Alternatively, you can write an IP address and netmask in separate
+# columns to specify the set of hosts.  Instead of a CIDR-address, you
+# can write "samehost" to match any of the server's own IP addresses,
+# or "samenet" to match any address in any subnet that the server is
+# directly connected to.
+#
+# METHOD can be "trust", "reject", "md5", "password", "scram-sha-256",
+# "gss", "sspi", "ident", "peer", "pam", "ldap", "radius" or "cert".
+# Note that "password" sends passwords in clear text; "md5" or
+# "scram-sha-256" are preferred since they send encrypted passwords.
+#
+# OPTIONS are a set of options for the authentication in the format
+# NAME=VALUE.  The available options depend on the different
+# authentication methods -- refer to the "Client Authentication"
+# section in the documentation for a list of which options are
+# available for which authentication methods.
+#
+# Database and user names containing spaces, commas, quotes and other
+# special characters must be quoted.  Quoting one of the keywords
+# "all", "sameuser", "samerole" or "replication" makes the name lose
+# its special character, and just match a database or username with
+# that name.
+#
+# This file is read on server startup and when the server receives a
+# SIGHUP signal.  If you edit the file on a running system, you have to
+# SIGHUP the server for the changes to take effect, run "pg_ctl reload",
+# or execute "SELECT pg_reload_conf()".
+#
+# Put your actual configuration here
+# ----------------------------------
+#
+# If you want to allow non-local connections, you need to add more
+# "host" records.  In that case you will also need to make PostgreSQL
+# listen on a non-local interface via the listen_addresses
+# configuration parameter, or via the -i or -h command line switches.
+
+# CAUTION: Configuring the system for local "trust" authentication
+# allows any local user to connect as any PostgreSQL user, including
+# the database superuser.  If you do not trust all your local users,
+# use another authentication method.
+
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# "local" is for Unix domain socket connections only
+#local   all             all                                     trust
+# IPv4 local connections:
+host    fusionpbx             fusionpbx             0.0.0.0/0            trust
+# IPv6 local connections:
+host    fusionpbx             fusionpbx             ::/0                 trust
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+#local   replication     all                                     trust
+#host    replication     all             127.0.0.1/32            trust
+#host    replication     all             ::1/128                 trust
+
+#host all all all md5
+# From https://info.crunchydata.com/blog/ssl-certificate-authentication-postgresql-docker-containers but commented out the peer authentication method
+#local   all             postgres                                trust
+# do not let the "postgres" superuser login via a certificate
+hostssl all             postgres        ::/0                    reject
+hostssl all             postgres        0.0.0.0/0               reject
+# only allow TLS secure connections
+hostssl all             postgres        ::/0                    cert clientcert=1
+hostssl all             postgres        0.0.0.0/0               cert clientcert=1
+
+## commented following two lines for cert testing
+#local all postgres    md5
+#host all postgres 0.0.0.0/0 md5 #temporarily allow user postgres to log on with a password
+Staring docker-entrypoint.sh as user postgres with params postgres -c config_file=/var/lib/postgresql/config/postgresql.conf -c hba_file=/var/lib/postgresql/config/pg_hba.conf
+
+PostgreSQL Database directory appears to contain a database; Skipping initialization
+
+2021-02-10 07:28:07.369 UTC [1] LOG:  starting PostgreSQL 12.4 on x86_64-pc-linux-musl, compiled by gcc (Alpine 9.3.0) 9.3.0, 64-bit
+2021-02-10 07:28:07.374 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2021-02-10 07:28:07.375 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2021-02-10 07:28:07.390 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2021-02-10 07:28:07.406 UTC [37] LOG:  database system was interrupted; last known up at 2021-02-10 07:28:05 UTC
+2021-02-10 07:28:07.439 UTC [37] LOG:  database system was not properly shut down; automatic recovery in progress
+2021-02-10 07:28:07.444 UTC [37] LOG:  redo starts at 0/164E260
+2021-02-10 07:28:07.444 UTC [37] LOG:  invalid record length at 0/164FEE8: wanted 24, got 0
+2021-02-10 07:28:07.444 UTC [37] LOG:  redo done at 0/164FE90
+2021-02-10 07:28:07.452 UTC [1] LOG:  database system is ready to accept connections
+2021-02-10 07:55:55.906 UTC [44] ERROR:  relation "v_webrtc" already exists
+2021-02-10 07:55:55.906 UTC [44] STATEMENT:  CREATE TABLE v_webrtc (
+	domain_uuid uuid,
+	webrtc_uuid uuid PRIMARY KEY,
+	webrtc_name text,
+	webrtc_type text,
+	webrtc_description text)
+2021-02-10 07:55:55.963 UTC [44] ERROR:  relation "v_user_settings" already exists
+2021-02-10 07:55:55.963 UTC [44] STATEMENT:  CREATE TABLE v_user_settings (
+	user_setting_uuid uuid PRIMARY KEY,
+	user_uuid uuid,
+	domain_uuid uuid,
+	user_setting_category text,
+	user_setting_subcategory text,
+	user_setting_name text,
+	user_setting_value text,
+	user_setting_order numeric,
+	user_setting_enabled boolean,
+	user_setting_description text)
+2021-02-10 07:55:56.279 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.279 UTC [52] DETAIL:  Key (default_setting_uuid)=(68feb973-be9a-42ac-94a1-54263dfde589) already exists.
+2021-02-10 07:55:56.279 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('68feb973-be9a-42ac-94a1-54263dfde589', 'provision', 'fanvil_lldp_tx_enable', 'numeric', '0', 'true', 'LLDP Transmit. 0-Disabled, 1-Enabled' );
+2021-02-10 07:55:56.280 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.280 UTC [52] DETAIL:  Key (default_setting_uuid)=(f0d1dd5b-7130-428c-bddb-a975d85587f5) already exists.
+2021-02-10 07:55:56.280 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('f0d1dd5b-7130-428c-bddb-a975d85587f5', 'provision', 'fanvil_lldp_refresh', 'numeric', '60', 'true', 'LLDP Refresh Timer. Default 60 seconds' );
+2021-02-10 07:55:56.281 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.281 UTC [52] DETAIL:  Key (default_setting_uuid)=(10af1d27-ef61-4c7c-94cf-8db797a84ebc) already exists.
+2021-02-10 07:55:56.281 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('10af1d27-ef61-4c7c-94cf-8db797a84ebc', 'provision', 'fanvil_lldp_learn', 'numeric', '0', 'true', 'Use LLDP learned information such as voip vlan' );
+2021-02-10 07:55:56.282 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.282 UTC [52] DETAIL:  Key (default_setting_uuid)=(b4cc791a-5389-4e1f-9f87-e8394b399d64) already exists.
+2021-02-10 07:55:56.282 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('b4cc791a-5389-4e1f-9f87-e8394b399d64', 'provision', 'fanvil_enable_vlan', 'numeric', '0', 'true', 'Enable VLAN Support. 0 - NO, 1 - Yes' );
+2021-02-10 07:55:56.282 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.282 UTC [52] DETAIL:  Key (default_setting_uuid)=(16d74bd9-7f44-4780-a202-3cfcbaa6ef5a) already exists.
+2021-02-10 07:55:56.282 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('16d74bd9-7f44-4780-a202-3cfcbaa6ef5a', 'provision', 'fanvil_lan_port_vlan', 'numeric', '256', 'false', 'Default VLAN for phone LAN port.' );
+2021-02-10 07:55:56.283 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.283 UTC [52] DETAIL:  Key (default_setting_uuid)=(530564ac-17aa-4167-b047-bf764250d91a) already exists.
+2021-02-10 07:55:56.283 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('530564ac-17aa-4167-b047-bf764250d91a', 'provision', 'fanvil_pc_port_vlan', 'numeric', '1', 'false', 'Default VLAN for phone PC port.' );
+2021-02-10 07:55:56.283 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.283 UTC [52] DETAIL:  Key (default_setting_uuid)=(2b72e19b-2437-45c0-9df5-4fef6ac078c6) already exists.
+2021-02-10 07:55:56.283 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('2b72e19b-2437-45c0-9df5-4fef6ac078c6', 'provision', 'fanvil_enable_diffserv', 'numeric', '1', 'true', 'Enable DiffServ(DSCP) Support. 0 - NO, 1 - Yes' );
+2021-02-10 07:55:56.284 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.284 UTC [52] DETAIL:  Key (default_setting_uuid)=(86081f7e-af03-41b9-a5af-b5593182c9ff) already exists.
+2021-02-10 07:55:56.284 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('86081f7e-af03-41b9-a5af-b5593182c9ff', 'provision', 'fanvil_qos_rtp_voice', 'numeric', '0', 'true', 'Layer 2 QoS 802.1p Priority Value for RTP Voice media' );
+2021-02-10 07:55:56.284 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.284 UTC [52] DETAIL:  Key (default_setting_uuid)=(8050cfbd-44d1-46db-b553-2cc0defd5fc2) already exists.
+2021-02-10 07:55:56.284 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('8050cfbd-44d1-46db-b553-2cc0defd5fc2', 'provision', 'fanvil_qos_rtp_video', 'numeric', '0', 'true', 'Layer 2 QoS 802.1p Priority Value for RTP Video media' );
+2021-02-10 07:55:56.285 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.285 UTC [52] DETAIL:  Key (default_setting_uuid)=(ddf89377-7303-435c-917a-bdd32579cf36) already exists.
+2021-02-10 07:55:56.285 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('ddf89377-7303-435c-917a-bdd32579cf36', 'provision', 'fanvil_qos_sip', 'numeric', '0', 'true', 'Layer 2 QoS 802.1p Priority Value for SIP signaling' );
+2021-02-10 07:55:56.285 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.285 UTC [52] DETAIL:  Key (default_setting_uuid)=(b6a89aa6-2e21-489c-8f1f-e819e6ced17b) already exists.
+2021-02-10 07:55:56.285 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('b6a89aa6-2e21-489c-8f1f-e819e6ced17b', 'provision', 'fanvil_dscp_rtp_voice', 'numeric', '46', 'true', 'Layer 3 QoS DSCP Value for RTP Voice media' );
+2021-02-10 07:55:56.286 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.286 UTC [52] DETAIL:  Key (default_setting_uuid)=(9a22bd5b-c2b0-4c06-bd19-63ef58837011) already exists.
+2021-02-10 07:55:56.286 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('9a22bd5b-c2b0-4c06-bd19-63ef58837011', 'provision', 'fanvil_dscp_rtp_video', 'numeric', '46', 'true', 'Layer 3 QoS DSCP Value for RTP Video media' );
+2021-02-10 07:55:56.287 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.287 UTC [52] DETAIL:  Key (default_setting_uuid)=(94effa7d-8c0f-4cca-b617-9d2d24748aa7) already exists.
+2021-02-10 07:55:56.287 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('94effa7d-8c0f-4cca-b617-9d2d24748aa7', 'provision', 'fanvil_dscp_sip', 'text', '-1', 'true', 'Layer 3 QoS DSCP Value for SIP signaling (Disabled by default)' );
+2021-02-10 07:55:56.287 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.287 UTC [52] DETAIL:  Key (default_setting_uuid)=(49f2ff3f-0628-44fa-a8d2-82cb38fbaf98) already exists.
+2021-02-10 07:55:56.287 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('49f2ff3f-0628-44fa-a8d2-82cb38fbaf98', 'provision', 'fanvil_video_codec', 'text', 'H264', 'false', 'Enable video codec on sip lines (Only h264 currently supported)' );
+2021-02-10 07:55:56.288 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.288 UTC [52] DETAIL:  Key (default_setting_uuid)=(be8c1341-3cb6-4aa8-bef5-642ff11199e8) already exists.
+2021-02-10 07:55:56.288 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('be8c1341-3cb6-4aa8-bef5-642ff11199e8', 'provision', 'fanvil_syslog_enable', 'numeric', '0', 'true', 'Enable Syslog server' );
+2021-02-10 07:55:56.289 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.289 UTC [52] DETAIL:  Key (default_setting_uuid)=(8281507b-80fa-450a-94b7-6f58a7a9e6e1) already exists.
+2021-02-10 07:55:56.289 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('8281507b-80fa-450a-94b7-6f58a7a9e6e1', 'provision', 'fanvil_syslog_server', 'text', '0.0.0.0', 'true', 'Syslog Server ip' );
+2021-02-10 07:55:56.290 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.290 UTC [52] DETAIL:  Key (default_setting_uuid)=(db7595a1-318b-49d8-86a6-8ff4b44e30f5) already exists.
+2021-02-10 07:55:56.290 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('db7595a1-318b-49d8-86a6-8ff4b44e30f5', 'provision', 'fanvil_syslog_server_port', 'numeric', '514', 'true', 'Syslog Server Port number' );
+2021-02-10 07:55:56.290 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.290 UTC [52] DETAIL:  Key (default_setting_uuid)=(67a916be-35df-44f1-ab12-81756fd1f911) already exists.
+2021-02-10 07:55:56.290 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('67a916be-35df-44f1-ab12-81756fd1f911', 'provision', 'fanvil_default_answer_mode', 'numeric', '2', 'true', 'Answer call as audio only or audio with video. 1-Audio, 2-Video' );
+2021-02-10 07:55:56.291 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.291 UTC [52] DETAIL:  Key (default_setting_uuid)=(bbbdf01c-d760-43cf-958d-e47c54dd3997) already exists.
+2021-02-10 07:55:56.291 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('bbbdf01c-d760-43cf-958d-e47c54dd3997', 'provision', 'fanvil_default_dial_mode', 'numeric', '1', 'true', 'Dial call as audio only or audio with video. 1-Audio, 2-Video Note: If you set this to video, then video is offered in the first invite which can cause your call to hang or not complete if going through a sip trunk provider.' );
+2021-02-10 07:55:56.291 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.291 UTC [52] DETAIL:  Key (default_setting_uuid)=(37ddabf0-8d7c-494f-b381-5bc4e3048bff) already exists.
+2021-02-10 07:55:56.291 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('37ddabf0-8d7c-494f-b381-5bc4e3048bff', 'provision', 'fanvil_enable_auto_upgrade', 'numeric', '0', 'true', 'Enable firmware auto upgrade 0 - NO, 1 - Yes' );
+2021-02-10 07:55:56.292 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.292 UTC [52] DETAIL:  Key (default_setting_uuid)=(5a2a79c3-befb-4b7a-998d-3f0bfc9fcde4) already exists.
+2021-02-10 07:55:56.292 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('5a2a79c3-befb-4b7a-998d-3f0bfc9fcde4', 'provision', 'fanvil_firmware_upgrade_server_1', 'text', 'https://server.yourdomain.com/app/fanvil/resources/firmware', 'false', 'Auto upgrade firmware server 1.' );
+2021-02-10 07:55:56.293 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.293 UTC [52] DETAIL:  Key (default_setting_uuid)=(de60a8fb-628a-4ee3-a76a-ff3e0a7f045f) already exists.
+2021-02-10 07:55:56.293 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('de60a8fb-628a-4ee3-a76a-ff3e0a7f045f', 'provision', 'fanvil_firmware_upgrade_server_2', 'text', 'https://server2.yourdomain.com/app/fanvil/resources/firmware', 'false', 'Auto upgrade firmware server 2.' );
+2021-02-10 07:55:56.293 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.293 UTC [52] DETAIL:  Key (default_setting_uuid)=(09134520-647a-4a86-bffd-d927aff2b33b) already exists.
+2021-02-10 07:55:56.293 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('09134520-647a-4a86-bffd-d927aff2b33b', 'provision', 'fanvil_firmware_upgrade_interval', 'numeric', '24', 'true', 'Check for firmware every X hours.' );
+2021-02-10 07:55:56.294 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.294 UTC [52] DETAIL:  Key (default_setting_uuid)=(3ca2b12b-21f1-4a6d-a0eb-8670105c77d9) already exists.
+2021-02-10 07:55:56.294 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('3ca2b12b-21f1-4a6d-a0eb-8670105c77d9', 'provision', 'fanvil_firmware_i20s', 'text', 'i20S2.1.1.3664T20180809203309.z', 'false', 'Filename of the i20S firmware ROM' );
+2021-02-10 07:55:56.294 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.294 UTC [52] DETAIL:  Key (default_setting_uuid)=(d07be0b3-a34b-4739-a227-766231e5bb52) already exists.
+2021-02-10 07:55:56.294 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('d07be0b3-a34b-4739-a227-766231e5bb52', 'provision', 'fanvil_firmware_i23s', 'text', 'i23S2.1.1.3664T20180809204215.z', 'false', 'Filename of the i23S firmware ROM' );
+2021-02-10 07:55:56.295 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.295 UTC [52] DETAIL:  Key (default_setting_uuid)=(6e0d313d-e44a-446f-9274-99e778d87cf5) already exists.
+2021-02-10 07:55:56.295 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('6e0d313d-e44a-446f-9274-99e778d87cf5', 'provision', 'fanvil_firmware_i30', 'text', 'i302.1.1.3664T20180809203614.z', 'false', 'Filename of the i30 firmware ROM' );
+2021-02-10 07:55:56.296 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.296 UTC [52] DETAIL:  Key (default_setting_uuid)=(a3cf0c35-4f92-4607-84a6-b06b29d67134) already exists.
+2021-02-10 07:55:56.296 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('a3cf0c35-4f92-4607-84a6-b06b29d67134', 'provision', 'fanvil_firmware_i31s', 'text', 'i31S2.1.1.3664T20180809203916.z', 'false', 'Filename of the i31S firmware ROM' );
+2021-02-10 07:55:56.297 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.297 UTC [52] DETAIL:  Key (default_setting_uuid)=(235ccea6-5ed0-45ff-a03f-d0cbc6ebaf01) already exists.
+2021-02-10 07:55:56.297 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('235ccea6-5ed0-45ff-a03f-d0cbc6ebaf01', 'provision', 'fanvil_firmware_x2p', 'text', 'x2-mono2.8.0.6251T20181017203533.z', 'false', 'Filename of the X2P firmware ROM' );
+2021-02-10 07:55:56.298 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.298 UTC [52] DETAIL:  Key (default_setting_uuid)=(8912437c-7142-4a85-b4aa-f83c1e50ad30) already exists.
+2021-02-10 07:55:56.298 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('8912437c-7142-4a85-b4aa-f83c1e50ad30', 'provision', 'fanvil_firmware_x3', 'text', 'x3s2.8.0.6251T20181017202549.z', 'false', 'Filename of the X3S/G firmware ROM' );
+2021-02-10 07:55:56.299 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.299 UTC [52] DETAIL:  Key (default_setting_uuid)=(756059c7-b754-4285-be22-0d51c82d62b3) already exists.
+2021-02-10 07:55:56.299 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('756059c7-b754-4285-be22-0d51c82d62b3', 'provision', 'fanvil_firmware_x4', 'text', 'x42.8.0.6251T20181017202853.z', 'false', 'Filename of the X4/G firmware ROM' );
+2021-02-10 07:55:56.299 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.299 UTC [52] DETAIL:  Key (default_setting_uuid)=(122ba840-7dee-4c8e-a93c-739681b4b1d4) already exists.
+2021-02-10 07:55:56.299 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('122ba840-7dee-4c8e-a93c-739681b4b1d4', 'provision', 'fanvil_firmware_x5s', 'text', 'x5s-6900-P0.13.3-1.8.0-2698T2018-09-30-15.23.04.z', 'false', 'Filename of the X5S firmware ROM' );
+2021-02-10 07:55:56.300 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.300 UTC [52] DETAIL:  Key (default_setting_uuid)=(32635e1c-dcb8-44e1-a0c4-5209b4f84392) already exists.
+2021-02-10 07:55:56.300 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('32635e1c-dcb8-44e1-a0c4-5209b4f84392', 'provision', 'fanvil_firmware_x6', 'text', 'x6-6914-P0.13.3-1.8.0-2697T2018-09-30-15.10.00.z', 'false', 'Filename of the X6 firmware ROM' );
+2021-02-10 07:55:56.300 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.300 UTC [52] DETAIL:  Key (default_setting_uuid)=(4b7f56f3-31a9-46dd-b588-35b253024b1f) already exists.
+2021-02-10 07:55:56.300 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('4b7f56f3-31a9-46dd-b588-35b253024b1f', 'provision', 'fanvil_egs_switch_mode', 'numeric', '0', 'false', '0 - Monostable, 1 - Bistable' );
+2021-02-10 07:55:56.301 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.301 UTC [52] DETAIL:  Key (default_setting_uuid)=(316ce083-69ba-4932-be02-845d3ed8f585) already exists.
+2021-02-10 07:55:56.301 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('316ce083-69ba-4932-be02-845d3ed8f585', 'provision', 'fanvil_egs_enable_card_reader', 'numeric', '0', 'false', 'Enable RFID Card Reader. 0 - NO, 1 - Yes' );
+2021-02-10 07:55:56.301 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.301 UTC [52] DETAIL:  Key (default_setting_uuid)=(7226d18c-7d49-449b-be7b-8cfb46c1ddb3) already exists.
+2021-02-10 07:55:56.301 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('7226d18c-7d49-449b-be7b-8cfb46c1ddb3', 'provision', 'fanvil_egs_enable_indoor_open', 'numeric', '0', 'false', 'Use indoor switch to unlock the door. 0 - NO, 1 - Yes' );
+2021-02-10 07:55:56.302 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.302 UTC [52] DETAIL:  Key (default_setting_uuid)=(83dce10f-6254-490c-af89-a2a004890c47) already exists.
+2021-02-10 07:55:56.302 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('83dce10f-6254-490c-af89-a2a004890c47', 'provision', 'fanvil_egs_enable_access_table', 'numeric', '1', 'false', 'Default: Enabled. 0 - NO, 1 - Yes' );
+2021-02-10 07:55:56.303 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.303 UTC [52] DETAIL:  Key (default_setting_uuid)=(d4ffbf45-5abe-4ef3-9cf7-f222257d5633) already exists.
+2021-02-10 07:55:56.303 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('d4ffbf45-5abe-4ef3-9cf7-f222257d5633', 'provision', 'fanvil_egs_opening_door_code_remote', 'text', '*', 'false', 'Default: *' );
+2021-02-10 07:55:56.304 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.304 UTC [52] DETAIL:  Key (default_setting_uuid)=(c51013fc-765e-4758-99a9-2738cfe9a7dd) already exists.
+2021-02-10 07:55:56.304 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('c51013fc-765e-4758-99a9-2738cfe9a7dd', 'provision', 'fanvil_egs_opening_door_code_local', 'text', '6789', 'false', 'Default: 6789' );
+2021-02-10 07:55:56.304 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.304 UTC [52] DETAIL:  Key (default_setting_uuid)=(0c5fe247-0361-4c69-a247-d14b5417e53e) already exists.
+2021-02-10 07:55:56.304 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('0c5fe247-0361-4c69-a247-d14b5417e53e', 'provision', 'fanvil_egs_enable_syslog', 'numeric', '0', 'false', 'Enable EGS Syslog. 0 - NO, 1 - Yes' );
+2021-02-10 07:55:56.305 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.305 UTC [52] DETAIL:  Key (default_setting_uuid)=(1a74a177-49fc-432e-b10e-39c7d0c7ddc4) already exists.
+2021-02-10 07:55:56.305 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('1a74a177-49fc-432e-b10e-39c7d0c7ddc4', 'provision', 'fanvil_egs_log_server', 'text', '0.0.0.0', 'false', 'EGS Syslog Server. Hostname or IP' );
+2021-02-10 07:55:56.306 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.306 UTC [52] DETAIL:  Key (default_setting_uuid)=(3fb2a87b-89b1-4d53-923d-c1478aec4f58) already exists.
+2021-02-10 07:55:56.306 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('3fb2a87b-89b1-4d53-923d-c1478aec4f58', 'provision', 'fanvil_egs_log_port', 'numeric', '514', 'false', 'EGS Syslog Server Port' );
+2021-02-10 07:55:56.540 UTC [52] ERROR:  duplicate key value violates unique constraint "v_default_settings_pkey"
+2021-02-10 07:55:56.540 UTC [52] DETAIL:  Key (default_setting_uuid)=(7af991ec-ddb9-4942-a05d-d1acc529fef5) already exists.
+2021-02-10 07:55:56.540 UTC [52] STATEMENT:  insert into v_default_settings (default_setting_uuid, default_setting_category, default_setting_subcategory, default_setting_name, default_setting_value, default_setting_enabled, default_setting_description ) values 
+	('7af991ec-ddb9-4942-a05d-d1acc529fef5', 'provision', 'yealink_ringtone_url', 'text', 'custom.wav', 'false', 'Before using this parameter, you should store the desired ring tone (custom.wav) to the provisioning server' );
+2021-02-10 07:55:56.932 UTC [58] ERROR:  view "view_call_block" does not exist
+2021-02-10 07:55:56.932 UTC [58] STATEMENT:  DROP VIEW view_call_block;
+2021-02-10 07:56:17.818 UTC [516] ERROR:  invalid input syntax for type boolean: "" at character 69
+2021-02-10 07:56:17.818 UTC [516] STATEMENT:  update v_domains set domain_enabled = 'true' where domain_enabled = '' or domain_enabled is null 
+2021-02-10 07:56:21.291 UTC [524] ERROR:  view "view_groups" does not exist
+2021-02-10 07:56:21.291 UTC [524] STATEMENT:  DROP VIEW view_groups;
+2021-02-10 07:56:31.145 UTC [689] ERROR:  view "view_users" does not exist
+2021-02-10 07:56:31.145 UTC [689] STATEMENT:  DROP VIEW view_users;
+2021-02-10 07:56:42.612 UTC [907] ERROR:  invalid input syntax for type boolean: "" at character 69
+2021-02-10 07:56:42.612 UTC [907] STATEMENT:  update v_domains set domain_enabled = 'true' where domain_enabled = '' or domain_enabled is null 
