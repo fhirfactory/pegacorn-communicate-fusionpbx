@@ -1,17 +1,8 @@
-docker run --net=host --privileged --name lingo-fusionpbx akinboj/fusionpbx-docker:1.0.0
-
-
 \helm\helm upgrade pegacorn-fusionpbx-site-a --install --namespace site-a --set serviceName=pegacorn-fusionpbx,imageTag=1.0.0-snapshot,numOfPods=1 helm
 
 
 docker exec 492 sudo -u postgres psql -c "ALTER USER fusionpbx WITH PASSWORD 'newpassword';"
 
-
-rm -rf /var/www/fusionpbx/resources/config.php
-
-git clone --single-branch --branch feature/development https://github.com/akinboj/fusionpbx-labs.git
-
-DEL /S /Q *.war
 ==================================================
 \helm upgrade pegacorn-fusionpbx-dbaas-site-a --install --namespace site-a --set serviceName=pegacorn-fusionpbx-dbaas,nodeAffinityLabel=fhirplace,hostPath=/data/fusionpbx-dbaas-site-a/data,hostPathCerts=/data/certificates,basePort=30510,imageTag=1.0.0-snapshot,dbUser=fusionpbx,dbName=fusionpbx,serviceType=NodePort,numOfPods=1 helm-postgres
 
