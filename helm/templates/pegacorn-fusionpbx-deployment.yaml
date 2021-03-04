@@ -101,11 +101,22 @@ spec:
             scheme: HTTP
           initialDelaySeconds: 30
         volumeMounts:
-        - name: certificates
-          mountPath: /var/lib/pegacorn-ssl-certs          
+        - mountPath: /etc/ssl/private
+          name: certkey
+        - mountPath: /etc/ssl/certs
+          name: cert
+        - mountPath: /etc/freeswitch/tls
+          name: pemkey
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
       volumes:
-      - name: certificates
+      - name: certkey
         hostPath:
-          path: {{ .Values.hostPathCerts }}
+          path: {{ .Values.hostPathKey }}
+      - name: cert
+        hostPath:
+          path: {{ .Values.hostPathCert }}
+      - name: pemkey
+        hostPath:
+          path: {{ .Values.hostPathPemKey }}
+
 

@@ -25,10 +25,13 @@ spec:
   ports:
   - port: 80
     name: http
+    protocol: TCP
   - port: 443
     name: https
+    protocol: TCP
   - port: 8021
     name: freeswitch-cli
+    protocol: TCP
   selector:
     app: {{ .Values.serviceName }}
     provider: fabric8
